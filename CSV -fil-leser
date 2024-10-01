@@ -1,3 +1,13 @@
+
+from pandas import read_csv
+
+Data = read_csv("temperatur.csv")
+print(Data)
+
+
+
+
+
 # Importer en komando fra hvert bibelotek:
 from numpy import linspace
 from scipy.optimize import curve_fit
