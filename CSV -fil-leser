@@ -1,10 +1,38 @@
-from pandas import read_csv
-import matplotlib.pyplot as plt 
 
-Data = read_csv("trykk_og_temperaturlogg_rune_time.csv.txt")
-print(Data)
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Les CSV-filen inn i en DataFrame, med riktig separator
+df = pd.read_csv('C:/Users/oddle/.spyder-py3/datafiler/trykk_og_temperaturlogg_rune_time.csv.txt', sep=';')
+
+# Sjekk kolonnenavnene for å sikre at de er korrekte
+print(df.columns)
+
+df.dropna(subset=['Dato', 'Trykk_barometer_(bar)'], inplace=True)
+
+# Anta at du vil plotte Tid_siden_start_(sek) (X-akse) og Trykk_barometer_(bar) (Y-akse)
+x_data1 = df ['Tid_siden_start_(sek)']
+x_data2 = df['Dato']  # Behold sekunder som flyttall, ikke konverter til dato
+y_data1 = df['Trykk_barometer_(bar)']
+y_data2 = df['Trykk_absolutt_trykk_maaler_(bar)']
 
 
+# Plott dataene
+plt.plot(x_data1, y_data1)
+plt.plot(x_data1, y_data2)
 
-plt.plot(x, y, "o", color ="r")
-plt.show
+
+# Legg til aksenavn og tittel
+plt.xlabel('dato')
+plt.ylabel('Trykk')
+plt.title('Trykk vs Tid siden start')
+
+# Valgfritt: Roter x-aksen hvis dataene er tette
+plt.xticks(rotation=45)
+
+# Vis grafen
+plt.show()
+
+# Sjekk nåværende arbeidskatalog
+print(os.getcwd())
