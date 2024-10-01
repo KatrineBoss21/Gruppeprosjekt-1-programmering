@@ -1,1 +1,15 @@
+# Importer en komando fra hvert bibelotek:
+from numpy import linspace
+from scipy.optimize import curve_fit
+# Importert hele bibelioteket:
+import matplotlib.pyplot as plt 
+
+# liste Alder
+x = [17, 25, 37, 48, 60]
+
+# liste Makspuls
+y = [195, 189, 183, 175, 166]
+
+plt.plot(x, y, "o", color ="r")
+plt.show
 
