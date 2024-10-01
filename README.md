@@ -1,1 +1,1 @@
-Dette prosjektet er laget av Oddleif og Kevin
+Denne koden er laget av Oddleif Gyland og Kevin Klungland
