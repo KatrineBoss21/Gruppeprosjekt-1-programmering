@@ -1,37 +1,34 @@
-import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Les CSV-filen inn i en DataFrame, med riktig separator
-df = pd.read_csv('C:/Users/oddle/.spyder-py3/datafiler/trykk_og_temperaturlogg_rune_time.csv.txt', sep=';')
+# Les inn data fra CSV
+fil = pd.read_csv('trykk_og_temperaturlogg_rune_time.csv.txt', sep=';')
 
-# Sjekk kolonnenavnene for å sikre at de er korrekte
-print(df.columns)
+# Konverter kolonnene til numeriske verdier, og håndter eventuelle feil
+fil['Trykk - barometer (bar)'] = pd.to_numeric(fil['Trykk - barometer (bar)'].str.replace(',', '.'), errors='coerce')
+fil['Trykk - absolutt trykk maaler (bar)'] = pd.to_numeric(fil['Trykk - absolutt trykk maaler (bar)'].str.replace(',', '.'), errors='coerce')
 
-df.dropna(subset=['Dato', 'Trykk_barometer_(bar)'], inplace=True)
+# Fjern rader med NaN i de relevante kolonnene
+fil.dropna(subset=['Dato og tid', 'Trykk - barometer (bar)', 'Trykk - absolutt trykk maaler (bar)'], inplace=True)
 
-# Anta at du vil plotte Tid_siden_start_(sek) (X-akse) og Trykk_barometer_(bar) (Y-akse)
-x_data1 = df ['Tid_siden_start_(sek)']
-x_data2 = df['Dato']  # Behold sekunder som flyttall, ikke konverter til dato
-y_data1 = df['Trykk_barometer_(bar)']
-y_data2 = df['Trykk_absolutt_trykk_maaler_(bar)']
+# Definer x- og y-data
+x_data1 = fil['Tid siden start (sek)']
+y_data1 = fil['Trykk - barometer (bar)']
+y_data2 = fil['Trykk - absolutt trykk maaler (bar)']
 
+# Lag plottet
+plt.figure(figsize=(12, 5))  
+plt.plot(x_data1, y_data1, label='Barometer Trykk', color='orange')
+plt.plot(x_data1, y_data2, label='Absolute Trykk', color='blue')
 
-# Plott dataene
-plt.plot(x_data1, y_data1)
-plt.plot(x_data1, y_data2)
+# Del y-aksen på 100
+plt.yticks(range(0, int(max(y_data2)) + 100, 100))
 
-
-# Legg til aksenavn og tittel
-plt.xlabel('dato')
-plt.ylabel('Trykk')
-plt.title('Trykk vs Tid siden start')
-
-# Valgfritt: Roter x-aksen hvis dataene er tette
-plt.xticks(rotation=45)
-
-# Vis grafen
+# Autoskalering av aksene
+plt.autoscale()
+plt.xlabel('Tid (sek)')
+plt.ylabel('Trykk (bar)') 
+plt.title('Trykk siden start')
+plt.legend()
 plt.show()
 
-# Sjekk nåværende arbeidskatalog
-print(os.getcwd())
