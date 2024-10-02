@@ -2,24 +2,28 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Les inn data fra CSV
-fil = pd.read_csv('trykk_og_temperaturlogg_rune_time.csv.txt', sep=';')
+fil = pd.read_csv('C:/Users/oddle/.spyder-py3/datafiler/trykk_og_temperaturlogg_rune_time.csv.txt', sep=';')
+fil = pd.read_csv('C:/Users/oddle/.spyder-py3/datafiler/temperatur_trykk_met_samme_rune_time_datasett.csv.txt', sep=';')
 
 # Konverter kolonnene til numeriske verdier, og håndter eventuelle feil
 fil['Trykk - barometer (bar)'] = pd.to_numeric(fil['Trykk - barometer (bar)'].str.replace(',', '.'), errors='coerce')
 fil['Trykk - absolutt trykk maaler (bar)'] = pd.to_numeric(fil['Trykk - absolutt trykk maaler (bar)'].str.replace(',', '.'), errors='coerce')
+fil['Lufttrykk i havnivå'] = pd.to_numeric(fil['Lufttrykk i havnivå'].str.replace(',', '.'), errors='coerce')
 
 # Fjern rader med NaN i de relevante kolonnene
-fil.dropna(subset=['Dato og tid', 'Trykk - barometer (bar)', 'Trykk - absolutt trykk maaler (bar)'], inplace=True)
+fil.dropna(subset=['Dato og tid', 'Trykk - barometer (bar)', 'Trykk - absolutt trykk maaler (bar)', 'Lufttrykk i havnivå'], inplace=True)
 
 # Definer x- og y-data
 x_data1 = fil['Tid siden start (sek)']
 y_data1 = fil['Trykk - barometer (bar)']
 y_data2 = fil['Trykk - absolutt trykk maaler (bar)']
+y_data3 = fil['lufttrykk i havnivå']
 
 # Lag plottet
 plt.figure(figsize=(12, 5))  
 plt.plot(x_data1, y_data1, label='Barometer Trykk', color='orange')
 plt.plot(x_data1, y_data2, label='Absolute Trykk', color='blue')
+plt.plot(x_data1, y_data3, label='Absolute Trykk MET', color='green')
 
 # Del y-aksen på 100
 plt.yticks(range(0, int(max(y_data2)) + 100, 100))
@@ -31,4 +35,3 @@ plt.ylabel('Trykk (bar)')
 plt.title('Trykk siden start')
 plt.legend()
 plt.show()
-
