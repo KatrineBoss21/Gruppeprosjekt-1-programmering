@@ -1,0 +1,94 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import datetime
+
+# Funksjon for å konvertere datoformatet i den lokale værstasjonen (håndterer begge formatene)
+def parse_local_date(date_str):
+    try:
+        # Sjekk om input er en streng
+        if isinstance(date_str, str):
+            # Prøv først amerikansk datoformat (MM.DD.ÅÅÅÅ TT:MM)
+            try:
+                return datetime.strptime(date_str, '%m.%d.%Y %H:%M')
+            except ValueError:
+                # Hvis det feiler, prøv europeisk format (DD.MM.ÅÅÅÅ TT:MM)
+                return datetime.strptime(date_str, '%d.%m.%Y %H:%M')
+        else:
+            return pd.NaT  # Hvis ikke en streng, returner NaT
+    except ValueError:
+        return pd.NaT
+
+# Funksjon for å konvertere datoformatet fra meteorologisk institutt
+def parse_met_date(date_str):
+    try:
+        # Sjekk om input er en streng
+        if isinstance(date_str, str):
+            return datetime.strptime(date_str, '%d.%m.%Y %H:%M')
+        else:
+            return pd.NaT
+    except ValueError:
+        return pd.NaT
+
+# Les inn data fra CSV
+fil = pd.read_csv('C:/Users/oddle/.spyder-py3/datafiler/trykk_og_temperaturlogg_rune_time.csv.txt', sep=';')
+fil_2 = pd.read_csv('C:/Users/oddle/.spyder-py3/datafiler/temperatur_trykk_met_samme_rune_time_datasett.csv.txt', sep=';')
+
+# Konverter kolonnene til numeriske verdier, og håndter eventuelle feil
+fil['Trykk - barometer (bar)'] = pd.to_numeric(fil['Trykk - barometer (bar)'].str.replace(',', '.'), errors='coerce')
+fil['Trykk - absolutt trykk maaler (bar)'] = pd.to_numeric(fil['Trykk - absolutt trykk maaler (bar)'].str.replace(',', '.'), errors='coerce')
+fil_2['Lufttrykk i havnivå'] = pd.to_numeric(fil_2['Lufttrykk i havnivå'].str.replace(',', '.'), errors='coerce')
+
+# Håndter datokolonnen i fil (lokal værstasjon)
+fil['Dato og tid'] = fil['Dato og tid'].apply(parse_local_date)
+
+# Håndter datokolonnen i fil_2 (meteorologisk institutt)
+fil_2['Tid'] = fil_2['Tid'].apply(parse_met_date)
+
+# Fjern rader med NaN i de relevante kolonnene
+fil.dropna(subset=['Dato og tid', 'Trykk - barometer (bar)', 'Trykk - absolutt trykk maaler (bar)'], inplace=True)
+fil_2.dropna(subset=['Lufttrykk i havnivå', 'Tid'], inplace=True)
+
+# Definer x- og y-data
+x_data1 = fil['Tid siden start (sek)']  # Lokalt fil tidsakse (i sek siden start)
+x_data2 = fil['Dato og tid']            # Lokalt fil dato og tid
+y_data1 = fil['Trykk - barometer (bar)'] * 10  # Multipliser for å matche oppløsning
+y_data2 = fil['Trykk - absolutt trykk maaler (bar)'] * 10
+
+# Meteorologisk institutt sine data
+y_data3 = fil_2['Lufttrykk i havnivå']
+x_data3 = fil_2['Tid']
+
+# Interpoler meteorologiske data til samme tidsintervall som lokalt data (hvert 10. sekund)
+fil_2_interpolated = pd.DataFrame({
+    'Tid': pd.to_datetime(x_data3),
+    'Lufttrykk i havnivå': y_data3
+}).set_index('Tid').resample('10S').interpolate()
+
+# Opprett interpolert y_data3
+x_data3_interpolated = fil_2_interpolated.index
+y_data3_interpolated = fil_2_interpolated['Lufttrykk i havnivå']
+
+# Trim y_data1 og y_data2 for å matche lengden til y_data3
+common_index = pd.Index(x_data3_interpolated)  # Bruk indeksen til det interpolerte datasettet
+y_data1_trimmed = y_data1[x_data2.isin(common_index)]
+y_data2_trimmed = y_data2[x_data2.isin(common_index)]
+
+# Trim x_data2 for å matche trimmed y_data1 og y_data2
+x_data2_trimmed = x_data2[x_data2.isin(common_index)]
+
+# Lag plottet
+plt.figure(figsize=(12, 5))  
+plt.plot(x_data3_interpolated, y_data3_interpolated, label='Lufttrykk i havnivå (MET)', color='green')
+plt.plot(x_data2_trimmed, y_data2_trimmed, label='Absolutt Trykk (Lokal)', color='blue')
+plt.plot(x_data2_trimmed, y_data1_trimmed, label='Barometer Trykk (Lokal)', color='orange')
+
+# Konfigurer y-aksen
+plt.yticks(range(0, int(max(y_data2_trimmed)) + 100, 100))
+
+# Autoskalering av aksene
+plt.autoscale()
+plt.xlabel('Tid (sek)')
+plt.ylabel('Trykk (mbar)')  # Merk at trykkene er i mbar etter å multiplisere med 10
+plt.title('Trykk siden start')
+plt.legend()
+plt.show()
